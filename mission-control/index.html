@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>J.A.R.V.I.S. // Mission Control</title>
+<style>
+  :root {
+    --cyan: #4df3ff;
+    --cyan-dim: #1b7f8c;
+    --cyan-glow: rgba(77, 243, 255, 0.55);
+    --navy-0: #050a12;
+    --navy-1: #081522;
+    --navy-2: #0c1c2e;
+    --danger: #ff5470;
+    --ok: #58ffb0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--navy-0);
+    color: var(--cyan);
+    font-family: 'Consolas', 'Courier New', ui-monospace, monospace;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(77,243,255,0.08), transparent 60%),
+      var(--navy-0);
+  }
+
+  /* ---------- background grid + scanlines ---------- */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(77,243,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,243,255,0.06) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+    mix-blend-mode: overlay;
+    animation: scanshift 6s linear infinite;
+  }
+  @keyframes scanshift {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 40px; }
+  }
+
+  .vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 49;
+    pointer-events: none;
+    box-shadow: inset 0 0 180px rgba(0,0,0,0.85);
+  }
+
+  /* ---------- layout ---------- */
+  .hud {
+    position: relative;
+    z-index: 5;
+    width: 100vw;
+    height: 100vh;
+    padding: 18px 26px 14px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    row-gap: 10px;
+    opacity: 0;
+    animation: hudIn 0.6s ease-out 0.2s forwards;
+  }
+  @keyframes hudIn { to { opacity: 1; } }
+
+  .glow-text { text-shadow: 0 0 6px var(--cyan-glow), 0 0 14px var(--cyan-glow); }
+
+  .panel {
+    border: 1px solid rgba(77,243,255,0.35);
+    background: linear-gradient(180deg, rgba(15,35,52,0.55), rgba(6,14,22,0.55));
+    box-shadow: 0 0 18px rgba(77,243,255,0.06) inset, 0 0 10px rgba(0,0,0,0.4);
+    border-radius: 2px;
+    padding: 10px 12px;
+    position: relative;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .panel::before {
+    content: '';
+    position: absolute; top: -1px; left: -1px; right: -1px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.6;
+  }
+  .panel-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    opacity: 0.9;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* boot flicker-in for panels, staggered via inline --d */
+  .boot .panel { animation: flickerIn 0.7s ease-out forwards; animation-delay: var(--d, 0s); }
+  @keyframes flickerIn {
+    0% { opacity: 0; transform: translateY(6px); }
+    10% { opacity: 0.5; }
+    20% { opacity: 0.05; }
+    35% { opacity: 0.8; }
+    45% { opacity: 0.15; }
+    60% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- header ---------- */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: 6px;
+    font-weight: 700;
+  }
+  .brand .subtitle {
+    font-size: 10px;
+    letter-spacing: 3px;
+    opacity: 0.65;
+    margin-top: 2px;
+  }
+  .brand .objective-line {
+    margin-top: 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--cyan);
+    opacity: 0.9;
+  }
+  .brand .objective-line b { color: #fff; font-weight: 400; }
+
+  .pills { display: flex; gap: 10px; margin-top: 10px; }
+  .pill {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    border: 1px solid rgba(77,243,255,0.4);
+    padding: 3px 8px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.85;
+  }
+  .pill .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 6px var(--ok);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .header-right { text-align: right; }
+  .clock {
+    font-size: 30px;
+    letter-spacing: 2px;
+    font-weight: 700;
+  }
+  .clock .hund { font-size: 16px; opacity: 0.6; }
+  .date-line { font-size: 11px; opacity: 0.7; margin-top: 2px; letter-spacing: 1px; }
+  .session-line { font-size: 10px; opacity: 0.5; margin-top: 2px; letter-spacing: 1px; }
+
+  /* ---------- main grid ---------- */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 250px 1fr 250px;
+    gap: 14px;
+    min-height: 0;
+  }
+  .col { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .col-left .vitals-panel { flex: 0 0 auto; }
+  .col-left .telemetry-panel, .col-right .diagnostics-panel { flex: 1 1 auto; min-height: 0; }
+
+  /* vitals bars */
+  .vital-row { margin-bottom: 7px; }
+  .vital-row:last-child { margin-bottom: 0; }
+  .vital-label {
+    display: flex; justify-content: space-between;
+    font-size: 9px; letter-spacing: 1px; opacity: 0.75; margin-bottom: 3px;
+  }
+  .vital-track {
+    height: 5px;
+    background: rgba(77,243,255,0.08);
+    border: 1px solid rgba(77,243,255,0.2);
+    overflow: hidden;
+  }
+  .vital-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+    box-shadow: 0 0 8px var(--cyan-glow);
+    transition: width 0.8s ease;
+  }
+
+  /* telemetry / diagnostics feed */
+  .feed {
+    height: 100%;
+    overflow: hidden;
+    font-size: 10px;
+    line-height: 1.6;
+    letter-spacing: 0.4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .feed div { opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .feed div.new { animation: fadeRow 0.4s ease-out; }
+  @keyframes fadeRow { from { opacity: 0; transform: translateX(-4px);} to { opacity: 0.85; transform: translateX(0);} }
+  .feed .tag { color: #fff; opacity: 0.9; margin-right: 4px; }
+
+  /* proximity radar */
+  .radar-wrap { display: flex; justify-content: center; align-items: center; padding: 6px 0; }
+
+  /* audio waveform */
+  .audio-panel canvas { width: 100%; height: 46px; display: block; }
+  .audio-state { font-size: 9px; letter-spacing: 1px; opacity: 0.6; margin-top: 4px; text-align: center; }
+
+  /* ---------- center orb ---------- */
+  .col-center {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  .orb-stage {
+    position: relative;
+    width: min(360px, 30vw + 120px);
+    height: min(360px, 30vw + 120px);
+    max-height: 40vh;
+    aspect-ratio: 1 / 1;
+  }
+  .orb-stage canvas, .orb-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .ring-outer, .ring-inner { transform-origin: 50% 50%; }
+  .ring-outer { animation: spin 40s linear infinite; }
+  .ring-inner { animation: spin 26s linear infinite reverse; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .orb-hint {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    opacity: 0.55;
+    text-align: center;
+  }
+  .response-text {
+    margin-top: 6px;
+    max-width: 480px;
+    min-height: 34px;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    opacity: 0.9;
+    line-height: 1.5;
+  }
+  .listen-indicator {
+    position: absolute;
+    bottom: -6px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; letter-spacing: 2px; color: var(--danger);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .listen-indicator.active { opacity: 1; text-shadow: 0 0 8px var(--danger); }
+
+  /* ---------- objective card ---------- */
+  .objective-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 22px;
+    align-items: center;
+    animation-delay: 0.9s;
+  }
+  .obj-target {
+    text-align: center;
+    padding-right: 20px;
+    border-right: 1px solid rgba(77,243,255,0.25);
+  }
+  .obj-target .label { font-size: 9px; letter-spacing: 1.5px; opacity: 0.6; }
+  .obj-target .big { font-size: 34px; font-weight: 700; }
+  .obj-target .current { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+  .obj-target .current span { color: #fff; }
+
+  .obj-mid { display: flex; flex-direction: column; gap: 8px; }
+  .segbar { display: flex; gap: 3px; height: 10px; }
+  .segbar .seg { flex: 1; background: rgba(77,243,255,0.12); border: 1px solid rgba(77,243,255,0.25); }
+  .segbar .seg.filled { background: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+  .stat-row { display: flex; gap: 22px; flex-wrap: wrap; }
+  .stat-row .stat { font-size: 10px; letter-spacing: 1px; }
+  .stat-row .stat b { display: block; font-size: 14px; color: #fff; font-weight: 700; letter-spacing: 0.5px; }
+
+  .obj-right { text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .obj-right .row { font-size: 10px; letter-spacing: 1px; opacity: 0.8; }
+  .obj-right .row b { color: var(--ok); }
+
+  .brief-btn, .send-btn {
+    font-family: inherit;
+    letter-spacing: 1.5px;
+    font-size: 10px;
+    background: rgba(77,243,255,0.08);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 7px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .brief-btn:hover, .send-btn:hover {
+    background: rgba(77,243,255,0.18);
+    box-shadow: 0 0 12px var(--cyan-glow);
+  }
+
+  .text-fallback {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .text-fallback input {
+    flex: 1;
+    background: rgba(77,243,255,0.05);
+    border: 1px solid rgba(77,243,255,0.3);
+    color: var(--cyan);
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 7px 10px;
+    outline: none;
+  }
+  .text-fallback input::placeholder { color: rgba(77,243,255,0.35); }
+
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="grid-bg"></div>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <div class="hud boot" id="hud">
+
+    <!-- ===================== HEADER ===================== -->
+    <header class="header panel" style="--d:0.05s" >
+      <div class="brand">
+        <h1 class="glow-text">J.A.R.V.I.S.</h1>
+        <div class="subtitle">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+        <div class="objective-line">OBJECTIVE: <b id="objectiveGoal">—</b></div>
+        <div class="pills">
+          <span class="pill"><span class="dot"></span>ONLINE</span>
+          <span class="pill"><span class="dot"></span>SECURE</span>
+          <span class="pill"><span class="dot"></span>ENCRYPTED</span>
+          <span class="pill"><span class="dot"></span>AUTO-LVL8</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="clock glow-text" id="clock">00:00:00<span class="hund">.00</span></div>
+        <div class="date-line" id="dateLine">—</div>
+        <div class="session-line">SESSION: <span id="sessionId">—</span></div>
+      </div>
+    </header>
+
+    <!-- ===================== MAIN GRID ===================== -->
+    <main class="main-grid">
+
+      <!-- LEFT COLUMN -->
+      <section class="col col-left">
+        <div class="panel vitals-panel" style="--d:0.15s">
+          <div class="panel-title"><span>SYSTEM VITALS</span></div>
+          <div id="vitalsList"></div>
+        </div>
+        <div class="panel telemetry-panel" style="--d:0.25s">
+          <div class="panel-title"><span>TELEMETRY</span></div>
+          <div class="feed" id="telemetryFeed"></div>
+        </div>
+      </section>
+
+      <!-- CENTER COLUMN -->
+      <section class="col-center">
+        <div class="orb-stage">
+          <canvas id="orbCanvas"></canvas>
+          <svg viewBox="0 0 200 200" class="ring-outer">
+            <circle cx="100" cy="100" r="94" fill="none" stroke="rgba(77,243,255,0.35)" stroke-width="1"/>
+            <g stroke="rgba(77,243,255,0.55)" stroke-width="1.4">
+              <!-- tick marks -->
+              <g id="ticksOuter"></g>
+            </g>
+            <path id="arcOuter1" fill="none" stroke="#4df3ff" stroke-width="2" stroke-linecap="round"/>
+            <path id="arcOuter2" fill="none" stroke="#4df3ff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+          </svg>
+          <svg viewBox="0 0 200 200" class="ring-inner">
+            <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(77,243,255,0.25)" stroke-width="1"/>
+            <path id="arcInner1" fill="none" stroke="#4df3ff" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <div class="listen-indicator" id="listenIndicator">● LISTENING</div>
+        </div>
+        <div class="orb-hint">CLICK ORB OR HOLD [SPACE] TO SPEAK</div>
+        <div class="response-text" id="responseText">JARVIS ONLINE. AWAITING INPUT.</div>
+      </section>
+
+      <!-- RIGHT COLUMN -->
+      <section class="col col-right">
+        <div class="panel" style="--d:0.15s">
+          <div class="panel-title"><span>PROXIMITY</span></div>
+          <div class="radar-wrap"><canvas id="radarCanvas" width="140" height="140"></canvas></div>
+        </div>
+        <div class="panel audio-panel" style="--d:0.25s">
+          <div class="panel-title"><span>AUDIO I/O</span></div>
+          <canvas id="waveCanvas"></canvas>
+          <div class="audio-state" id="audioState">IDLE</div>
+        </div>
+        <div class="panel diagnostics-panel" style="--d:0.35s">
+          <div class="panel-title"><span>DIAGNOSTICS</span></div>
+          <div class="feed" id="diagnosticsFeed"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===================== PRIMARY OBJECTIVE ===================== -->
+    <footer class="objective-card panel" style="--d:0.45s">
+      <div class="obj-target">
+        <div class="label" id="objLabel">PRIMARY OBJECTIVE</div>
+        <div class="big glow-text" id="objTargetValue">—</div>
+        <div class="current">CURRENT: <span id="objCurrentValue">—</span></div>
+      </div>
+      <div class="obj-mid">
+        <div class="segbar" id="segBar"></div>
+        <div class="stat-row" id="statRow"></div>
+      </div>
+      <div class="obj-right">
+        <div class="row">PROGRESS: <b id="objProgress">—</b></div>
+        <div class="row">STATUS: <b id="objStatus">—</b></div>
+        <div class="row">ETA: <b id="objEta">—</b></div>
+        <button class="brief-btn" id="briefBtn">▶ MORNING BRIEF</button>
+      </div>
+      <div class="text-fallback">
+        <input type="text" id="textInput" placeholder="TYPE A COMMAND…" />
+        <button class="send-btn" id="sendBtn">SEND</button>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   MOCK DATA OBJECT
+   ----------------------------------------------------------------------------
+   Every number rendered on this dashboard is read from JARVIS_DATA below.
+   Nothing else in the file references a hardcoded business number. To wire
+   this up to real sources later, replace the values here (or point this
+   object at a fetch() from your own backend / Claude routine output) and
+   the entire UI updates without any changes to markup, CSS, or render logic.
+   ============================================================================ */
+const JARVIS_DATA = {
+  identity: {
+    objective: "SCALE MRR TO $50,000",
+    sessionPrefix: "JRV",
+  },
+
+  // SYSTEM VITALS panel — six bars, 0-100
+  vitals: [
+    { label: "CORE TEMP",     value: 42 },
+    { label: "MEMORY LOAD",   value: 61 },
+    { label: "NET LATENCY",   value: 18 },
+    { label: "API HEALTH",    value: 97 },
+    { label: "AGENT LOAD",    value: 54 },
+    { label: "POWER RESERVE", value: 88 },
+  ],
+
+  // TELEMETRY panel — scrolling log lines, newest appended over time
+  telemetry: [
+    "REVENUE SYNC :: OK",
+    "GMAIL :: 3 NEW THREADS",
+    "BUFFER :: QUEUE CLEAR",
+    "META ADS :: SPEND NOMINAL",
+    "REVENUECAT :: 2 NEW SUBS",
+    "SCOUT :: MORNING PASS COMPLETE",
+    "OPERATOR :: 1 ITEM ESCALATED",
+    "ADVISOR :: 3 RECS READY",
+  ],
+
+  // DIAGNOSTICS panel — second scrolling log
+  diagnostics: [
+    "CONNECTOR HEALTH :: NOMINAL",
+    "FAQ.MD :: 42 ENTRIES LOADED",
+    "SPEECH ENGINE :: READY",
+    "LATENCY CHECK :: 118MS",
+    "AUTH TOKENS :: VALID",
+    "BACKUP SNAPSHOT :: 04:00",
+  ],
+
+  // PROXIMITY panel
+  proximity: { contacts: 4, sweepSeconds: 4 },
+
+  // PRIMARY OBJECTIVE card
+  objectiveCard: {
+    label: "MONTHLY RECURRING REVENUE",
+    target: 50000,
+    current: 34210,
+    unit: "$",
+    segments: 20,
+    stats: [
+      { label: "MRR",     value: "$34,210" },
+      { label: "AD SPEND", value: "$4,120" },
+      { label: "ROAS",    value: "3.4x" },
+      { label: "SIGNUPS", value: "128" },
+    ],
+    status: "ON TRACK",
+    eta: "42 DAYS",
+  },
+
+  // MORNING BRIEF — spoken summary + top 3 recommendations
+  morningBrief: {
+    summary:
+      "Good morning. Revenue is up six percent week over week at thirty four " +
+      "thousand two hundred ten dollars in monthly recurring revenue. Ad spend " +
+      "is nominal and return on ad spend is holding at three point four x.",
+    recommendations: [
+      "Increase budget on the Founder Story ad. It is running a four point one x return on ad spend while every other creative is under two x.",
+      "Follow up with the twelve failed payments from yesterday before they churn.",
+      "Ship the pricing page test. Traffic has been flat for five days waiting on it.",
+    ],
+  },
+};
+
+/* ============================================================================
+   BOOT / CLOCK / HEADER
+   ============================================================================ */
+document.getElementById('objectiveGoal').textContent = JARVIS_DATA.identity.objective;
+
+const sessionId = JARVIS_DATA.identity.sessionPrefix + '-' + Math.floor(1000 + Math.random() * 9000);
+document.getElementById('sessionId').textContent = sessionId;
+
+function pad(n, len = 2) { return String(n).padStart(len, '0'); }
+
+function tickClock() {
+  const now = new Date();
+  const h = pad(now.getHours()), m = pad(now.getMinutes()), s = pad(now.getSeconds());
+  const hund = pad(Math.floor(now.getMilliseconds() / 10));
+  document.getElementById('clock').innerHTML = `${h}:${m}:${s}<span class="hund">.${hund}</span>`;
+  const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: '2-digit' }).toUpperCase();
+  document.getElementById('dateLine').textContent = dateStr;
+  requestAnimationFrame(tickClock);
+}
+tickClock();
+
+/* ============================================================================
+   VITALS
+   ============================================================================ */
+const vitalsList = document.getElementById('vitalsList');
+JARVIS_DATA.vitals.forEach(v => {
+  const row = document.createElement('div');
+  row.className = 'vital-row';
+  row.innerHTML = `
+    <div class="vital-label"><span>${v.label}</span><span>${v.value}%</span></div>
+    <div class="vital-track"><div class="vital-fill" style="width:${v.value}%"></div></div>`;
+  vitalsList.appendChild(row);
+});
+// gentle live jitter so vitals feel alive
+setInterval(() => {
+  document.querySelectorAll('.vital-fill').forEach((el, i) => {
+    const base = JARVIS_DATA.vitals[i].value;
+    const jitter = base + (Math.random() * 6 - 3);
+    el.style.width = Math.max(2, Math.min(100, jitter)) + '%';
+  });
+}, 2200);
+
+/* ============================================================================
+   FEEDS (telemetry + diagnostics) — auto-scrolling, appends a line periodically
+   ============================================================================ */
+function makeFeedController(elId, lines) {
+  const el = document.getElementById(elId);
+  let i = 0;
+  function pushLine() {
+    const div = document.createElement('div');
+    const time = new Date().toLocaleTimeString(undefined, { hour12: false });
+    div.className = 'new';
+    div.innerHTML = `<span class="tag">[${time}]</span>${lines[i % lines.length]}`;
+    el.appendChild(div);
+    i++;
+    while (el.children.length > 8) el.removeChild(el.firstChild);
+  }
+  pushLine();
+  setInterval(pushLine, 3200 + Math.random() * 1800);
+  return { pushLine, custom: (text) => {
+    const div = document.createElement('div');
+    const time = new Date().toLocaleTimeString(undefined, { hour12: false });
+    div.className = 'new';
+    div.innerHTML = `<span class="tag">[${time}]</span>${text}`;
+    el.appendChild(div);
+    while (el.children.length > 8) el.removeChild(el.firstChild);
+  }};
+}
+const telemetryFeed = makeFeedController('telemetryFeed', JARVIS_DATA.telemetry);
+const diagnosticsFeed = makeFeedController('diagnosticsFeed', JARVIS_DATA.diagnostics);
+
+/* ============================================================================
+   PRIMARY OBJECTIVE CARD
+   ============================================================================ */
+const oc = JARVIS_DATA.objectiveCard;
+document.getElementById('objLabel').textContent = oc.label;
+document.getElementById('objTargetValue').textContent = oc.unit + oc.target.toLocaleString();
+document.getElementById('objStatus').textContent = oc.status;
+document.getElementById('objEta').textContent = oc.eta;
+const progressPct = Math.min(100, Math.round((oc.current / oc.target) * 100));
+document.getElementById('objProgress').textContent = progressPct + '%';
+
+const segBar = document.getElementById('segBar');
+const filledSegs = Math.round((progressPct / 100) * oc.segments);
+for (let i = 0; i < oc.segments; i++) {
+  const seg = document.createElement('div');
+  seg.className = 'seg' + (i < filledSegs ? ' filled' : '');
+  segBar.appendChild(seg);
+}
+
+const statRow = document.getElementById('statRow');
+oc.stats.forEach(s => {
+  const div = document.createElement('div');
+  div.className = 'stat';
+  div.innerHTML = `<b>${s.value}</b>${s.label}`;
+  statRow.appendChild(div);
+});
+
+// animated count-up for current value
+const currentEl = document.getElementById('objCurrentValue');
+let displayedCurrent = 0;
+function animateCurrent() {
+  const target = oc.current;
+  const step = Math.max(1, Math.round(target / 60));
+  const run = () => {
+    displayedCurrent = Math.min(target, displayedCurrent + step);
+    currentEl.textContent = oc.unit + displayedCurrent.toLocaleString();
+    if (displayedCurrent < target) requestAnimationFrame(run);
+  };
+  run();
+}
+animateCurrent();
+
+/* ============================================================================
+   ORB — rotating particle sphere (canvas), pulses on speak/process
+   ============================================================================ */
+const orbCanvas = document.getElementById('orbCanvas');
+const octx = orbCanvas.getContext('2d');
+let orbState = 'idle'; // idle | listening | speaking | processing
+let particles = [];
+const PARTICLE_COUNT = 420;
+const RADIUS = 78;
+
+function buildSphere() {
+  particles = [];
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const phi = Math.acos(1 - 2 * (i + 0.5) / PARTICLE_COUNT);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+    particles.push({
+      x: Math.sin(phi) * Math.cos(theta),
+      y: Math.sin(phi) * Math.sin(theta),
+      z: Math.cos(phi),
+    });
+  }
+}
+buildSphere();
+
+function resizeOrbCanvas() {
+  const rect = orbCanvas.getBoundingClientRect();
+  orbCanvas.width = rect.width * devicePixelRatio;
+  orbCanvas.height = rect.height * devicePixelRatio;
+}
+window.addEventListener('resize', resizeOrbCanvas);
+resizeOrbCanvas();
+
+let rotY = 0, rotX = 0.3;
+let pulsePhase = 0;
+
+function drawOrb() {
+  const w = orbCanvas.width, h = orbCanvas.height;
+  octx.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2;
+  const scale = Math.min(w, h) / 2 / RADIUS * 0.86;
+
+  rotY += orbState === 'idle' ? 0.004 : 0.012;
+  pulsePhase += (orbState === 'speaking' || orbState === 'processing') ? 0.12 : 0.02;
+  const pulse = (orbState === 'speaking' || orbState === 'processing')
+    ? 1 + Math.sin(pulsePhase) * 0.06
+    : 1 + Math.sin(pulsePhase) * 0.015;
+
+  const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+  const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+
+  const projected = particles.map(p => {
+    let x = p.x * cosY - p.z * sinY;
+    let z = p.x * sinY + p.z * cosY;
+    let y = p.y * cosX - z * sinX;
+    z = p.y * sinX + z * cosX;
+    return { x, y, z };
+  }).sort((a, b) => a.z - b.z);
+
+  const color = orbState === 'idle' ? [77, 243, 255] : orbState === 'listening' ? [255, 90, 120] : [120, 255, 220];
+
+  projected.forEach(p => {
+    const depth = (p.z + 1) / 2;
+    const px = cx + p.x * RADIUS * scale * pulse;
+    const py = cy + p.y * RADIUS * scale * pulse;
+    const r = 0.6 + depth * 1.6;
+    const alpha = 0.15 + depth * 0.75;
+    octx.beginPath();
+    octx.arc(px, py, r * devicePixelRatio, 0, Math.PI * 2);
+    octx.fillStyle = `rgba(${color[0]},${color[1]},${color[2]},${alpha})`;
+    octx.shadowColor = `rgba(${color[0]},${color[1]},${color[2]},0.9)`;
+    octx.shadowBlur = 4 * depth * devicePixelRatio;
+    octx.fill();
+  });
+
+  requestAnimationFrame(drawOrb);
+}
+drawOrb();
+
+/* HUD ring tick marks + rotating arcs (SVG) */
+const ticksOuter = document.getElementById('ticksOuter');
+for (let i = 0; i < 48; i++) {
+  const angle = (i / 48) * Math.PI * 2;
+  const long = i % 4 === 0;
+  const r1 = long ? 84 : 89;
+  const r2 = 94;
+  const x1 = 100 + Math.cos(angle) * r1, y1 = 100 + Math.sin(angle) * r1;
+  const x2 = 100 + Math.cos(angle) * r2, y2 = 100 + Math.sin(angle) * r2;
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+  line.setAttribute('opacity', long ? 0.7 : 0.3);
+  ticksOuter.appendChild(line);
+}
+
+function arcPath(cx, cy, r, startDeg, endDeg) {
+  const s = (startDeg * Math.PI) / 180, e = (endDeg * Math.PI) / 180;
+  const x1 = cx + r * Math.cos(s), y1 = cy + r * Math.sin(s);
+  const x2 = cx + r * Math.cos(e), y2 = cy + r * Math.sin(e);
+  const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+  return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+}
+document.getElementById('arcOuter1').setAttribute('d', arcPath(100, 100, 94, -40, 60));
+document.getElementById('arcOuter2').setAttribute('d', arcPath(100, 100, 94, 140, 260));
+document.getElementById('arcInner1').setAttribute('d', arcPath(100, 100, 78, 20, 160));
+
+/* ============================================================================
+   PROXIMITY RADAR
+   ============================================================================ */
+const radarCanvas = document.getElementById('radarCanvas');
+const rctx = radarCanvas.getContext('2d');
+let sweepAngle = 0;
+const contacts = [];
+for (let i = 0; i < JARVIS_DATA.proximity.contacts; i++) {
+  contacts.push({ angle: Math.random() * Math.PI * 2, dist: 0.3 + Math.random() * 0.6 });
+}
+function drawRadar() {
+  const w = radarCanvas.width, h = radarCanvas.height;
+  const cx = w / 2, cy = h / 2, r = w / 2 - 4;
+  rctx.clearRect(0, 0, w, h);
+  rctx.strokeStyle = 'rgba(77,243,255,0.35)';
+  rctx.lineWidth = 1;
+  [0.33, 0.66, 1].forEach(f => {
+    rctx.beginPath();
+    rctx.arc(cx, cy, r * f, 0, Math.PI * 2);
+    rctx.stroke();
+  });
+  rctx.beginPath(); rctx.moveTo(cx - r, cy); rctx.lineTo(cx + r, cy);
+  rctx.moveTo(cx, cy - r); rctx.lineTo(cx, cy + r); rctx.stroke();
+
+  contacts.forEach(c => {
+    const px = cx + Math.cos(c.angle) * c.dist * r;
+    const py = cy + Math.sin(c.angle) * c.dist * r;
+    rctx.beginPath();
+    rctx.arc(px, py, 2.5, 0, Math.PI * 2);
+    rctx.fillStyle = '#4df3ff';
+    rctx.shadowColor = '#4df3ff';
+    rctx.shadowBlur = 6;
+    rctx.fill();
+  });
+
+  const grad = rctx.createConicGradient
+    ? rctx.createConicGradient(sweepAngle - Math.PI / 2, cx, cy)
+    : null;
+  rctx.save();
+  rctx.beginPath();
+  rctx.moveTo(cx, cy);
+  rctx.arc(cx, cy, r, sweepAngle - 0.5, sweepAngle);
+  rctx.closePath();
+  rctx.fillStyle = 'rgba(77,243,255,0.25)';
+  rctx.fill();
+  rctx.restore();
+
+  sweepAngle += (Math.PI * 2) / (JARVIS_DATA.proximity.sweepSeconds * 60);
+  requestAnimationFrame(drawRadar);
+}
+drawRadar();
+
+/* ============================================================================
+   AUDIO WAVEFORM — flat when idle, animates while listening/speaking
+   ============================================================================ */
+const waveCanvas = document.getElementById('waveCanvas');
+const wctx = waveCanvas.getContext('2d');
+function resizeWave() {
+  const rect = waveCanvas.getBoundingClientRect();
+  waveCanvas.width = rect.width * devicePixelRatio;
+  waveCanvas.height = rect.height * devicePixelRatio;
+}
+window.addEventListener('resize', resizeWave);
+resizeWave();
+
+let waveTime = 0;
+function drawWave() {
+  const w = waveCanvas.width, h = waveCanvas.height;
+  wctx.clearRect(0, 0, w, h);
+  wctx.beginPath();
+  const active = orbState === 'listening' || orbState === 'speaking';
+  const amp = active ? h * 0.32 : h * 0.02;
+  const freq = active ? 0.06 : 0.02;
+  for (let x = 0; x <= w; x += 2) {
+    const n = active ? (Math.sin(x * freq + waveTime) * Math.sin(x * 0.013 + waveTime * 0.7)) : 0;
+    const y = h / 2 + n * amp * (0.6 + 0.4 * Math.sin(waveTime * 2));
+    x === 0 ? wctx.moveTo(x, y) : wctx.lineTo(x, y);
+  }
+  wctx.strokeStyle = active ? '#4df3ff' : 'rgba(77,243,255,0.4)';
+  wctx.lineWidth = 1.6 * devicePixelRatio;
+  wctx.shadowColor = '#4df3ff';
+  wctx.shadowBlur = active ? 8 : 0;
+  wctx.stroke();
+  waveTime += 0.12;
+  requestAnimationFrame(drawWave);
+}
+drawWave();
+
+function setOrbState(state) {
+  orbState = state;
+  document.getElementById('listenIndicator').classList.toggle('active', state === 'listening');
+  document.getElementById('audioState').textContent = state.toUpperCase();
+}
+
+/* ============================================================================
+   VOICE — Web Speech API (recognition + synthesis), text fallback
+   ============================================================================ */
+const responseText = document.getElementById('responseText');
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isListening = false;
+
+if (SpeechRec) {
+  recognition = new SpeechRec();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => { isListening = true; setOrbState('listening'); };
+  recognition.onerror = () => { isListening = false; setOrbState('idle'); };
+  recognition.onend = () => { isListening = false; if (orbState === 'listening') setOrbState('idle'); };
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    telemetryFeed.custom(`YOU: "${transcript.toUpperCase()}"`);
+    handleCommand(transcript);
+  };
+} else {
+  telemetryFeed.custom('SPEECH RECOGNITION UNSUPPORTED IN THIS BROWSER');
+}
+
+function speak(text) {
+  responseText.textContent = text;
+  setOrbState('speaking');
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1.0;
+    utter.onend = () => setOrbState('idle');
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  } else {
+    setTimeout(() => setOrbState('idle'), 1800);
+  }
+}
+
+function handleCommand(raw) {
+  const text = raw.toLowerCase();
+  setOrbState('processing');
+  diagnosticsFeed.custom('COMMAND PARSED');
+  setTimeout(() => {
+    if (text.includes('brief') || text.includes('morning')) {
+      runMorningBrief();
+    } else if (text.includes('status') || text.includes('objective')) {
+      speak(`Current status: ${oc.status}. ${oc.label} at ${oc.unit}${oc.current.toLocaleString()} of ${oc.unit}${oc.target.toLocaleString()}, ${progressPct} percent to target.`);
+    } else if (text.includes('vitals')) {
+      speak(`All systems nominal. Agent load at ${JARVIS_DATA.vitals[4].value} percent.`);
+    } else {
+      speak(`Acknowledged. I heard: ${raw}`);
+    }
+  }, 500);
+}
+
+function runMorningBrief() {
+  telemetryFeed.custom('MORNING BRIEF INITIATED');
+  const brief = JARVIS_DATA.morningBrief;
+  const recap = brief.recommendations
+    .map((r, i) => `Recommendation ${i + 1}: ${r}`)
+    .join(' ');
+  speak(`${brief.summary} ${recap}`);
+}
+
+document.getElementById('briefBtn').addEventListener('click', runMorningBrief);
+
+/* click orb to talk */
+document.querySelector('.orb-stage').addEventListener('click', () => {
+  if (!recognition) return;
+  if (isListening) { recognition.stop(); } else { recognition.start(); }
+});
+
+/* hold spacebar to talk */
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !e.repeat && document.activeElement.id !== 'textInput') {
+    e.preventDefault();
+    if (recognition && !isListening) recognition.start();
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.code === 'Space' && document.activeElement.id !== 'textInput') {
+    e.preventDefault();
+    if (recognition && isListening) recognition.stop();
+  }
+});
+
+/* text input fallback */
+function submitText() {
+  const input = document.getElementById('textInput');
+  const val = input.value.trim();
+  if (!val) return;
+  telemetryFeed.custom(`YOU: "${val.toUpperCase()}"`);
+  handleCommand(val);
+  input.value = '';
+}
+document.getElementById('sendBtn').addEventListener('click', submitText);
+document.getElementById('textInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitText();
+});
+
+/* ============================================================================
+   BOOT SEQUENCE — greet once panels have flickered on
+   ============================================================================ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    speak('Systems online. Good to have you back. Awaiting your command.');
+  }, 1600);
+});
+</script>
+</body>
+</html>
