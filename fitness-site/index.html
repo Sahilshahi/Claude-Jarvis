@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Brand – Live Personal Coaching</title>
+<meta name="description" content="Train live, one-on-one, with a certified coach from anywhere.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --bg-2: #141416;
+    --card: #1b1b1e;
+    --line: #2a2a2e;
+    --text: #f4f4f2;
+    --muted: #a3a3a8;
+    --accent: #c6ff3d;       /* main brand color — change this one line to rebrand */
+    --accent-ink: #0b0b0c;
+    --radius: 20px;
+    --max: 1180px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.6; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+  section { padding: 96px 0; }
+  h1, h2, .display { font-family: Anton, Impact, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .5px; line-height: 1.02; }
+  h2 { font-size: clamp(36px, 6vw, 64px); margin-bottom: 16px; }
+  .lead { color: var(--muted); font-size: 18px; max-width: 640px; }
+  .eyebrow { display: inline-block; color: var(--accent); font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 15px 26px; border-radius: 999px; border: 0; cursor: pointer; font-size: 16px; transition: transform .2s, box-shadow .2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -10px var(--accent); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--accent); box-shadow: none; }
+
+  /* NAV */
+  nav { position: fixed; inset: 0 0 auto 0; z-index: 50; transition: background .3s, backdrop-filter .3s; }
+  nav.scrolled { background: rgba(11,11,12,.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .logo { font-family: Anton, sans-serif; font-size: 26px; letter-spacing: 1px; text-transform: uppercase; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 32px; font-weight: 500; font-size: 15px; }
+  .nav-links a { color: var(--muted); transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { padding: 11px 20px; font-size: 14px; }
+  .burger { display: none; background: none; border: 0; color: var(--text); cursor: pointer; }
+  @media (max-width: 860px) {
+    .nav-links { display: none; position: absolute; top: 72px; left: 0; right: 0; flex-direction: column; gap: 0; background: var(--bg-2); border-bottom: 1px solid var(--line); }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 16px 20px; border-top: 1px solid var(--line); }
+    .burger { display: block; }
+    .nav-cta { display: none; }
+  }
+
+  /* HERO */
+  .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 120px; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; inset: 0; background:
+      radial-gradient(60% 50% at 80% 20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 10% 90%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%); pointer-events: none; }
+  .hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; position: relative; }
+  .hero h1 { font-size: clamp(56px, 11vw, 140px); }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { margin: 24px 0 36px; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+  .chat-chip { display: inline-flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); padding: 8px 18px 8px 8px; border-radius: 999px; margin-bottom: 28px; font-size: 14px; }
+  .chat-chip .dot { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; }
+  .chat-chip .live { width: 8px; height: 8px; background: #3ddc84; border-radius: 50%; box-shadow: 0 0 0 0 #3ddc84; animation: pulse 2s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .hero-visual { aspect-ratio: 4/5; border-radius: 28px; position: relative; overflow: hidden; border: 1px solid var(--line); background: var(--card); }
+  .hero-visual .ph { position: absolute; inset: 0; }
+  .float-card { position: absolute; background: rgba(20,20,22,.85); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; font-size: 14px; }
+  .float-card b { display: block; font-family: Anton, sans-serif; font-size: 28px; font-weight: 400; color: var(--accent); }
+  .fc-1 { left: -10px; bottom: 40px; } .fc-2 { right: 16px; top: 24px; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } .hero-visual { max-width: 420px; } .fc-1 { left: 12px; } }
+
+  /* placeholder art, used wherever a real photo should go */
+  .ph { display: grid; place-items: center; text-align: center; color: rgba(255,255,255,.55); font-size: 13px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+  .ph svg { width: 44px; height: 44px; margin: 0 auto 10px; opacity: .8; }
+  .ph-a { background: linear-gradient(135deg, #2b3a12, #121212 70%); }
+  .ph-b { background: linear-gradient(135deg, #3a2412, #121212 70%); }
+  .ph-c { background: linear-gradient(135deg, #12303a, #121212 70%); }
+  .ph-d { background: linear-gradient(135deg, #2e123a, #121212 70%); }
+  .ph-e { background: linear-gradient(135deg, #3a1220, #121212 70%); }
+
+  /* SERVICES */
+  .services-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 48px; }
+  .marquee { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .marquee-track { display: flex; gap: 20px; width: max-content; animation: scroll 40s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  @keyframes scroll { to { transform: translateX(-50%); } }
+  .svc { width: 340px; height: 420px; border-radius: var(--radius); position: relative; overflow: hidden; border: 1px solid var(--line); flex-shrink: 0; }
+  .svc .ph { position: absolute; inset: 0; align-items: start; padding-top: 110px; }
+  .svc-body { position: absolute; left: 0; right: 0; bottom: 0; padding: 24px; background: linear-gradient(transparent, rgba(0,0,0,.9)); }
+  .svc-body h3 { font-family: Anton, sans-serif; font-weight: 400; font-size: 28px; text-transform: uppercase; }
+  .svc-body p { color: var(--muted); font-size: 14px; }
+  @media (max-width: 600px) { .svc { width: 270px; height: 360px; } }
+
+  /* TESTIMONIALS */
+  .testi { background: var(--bg-2); }
+  .slider { position: relative; margin-top: 48px; }
+  .slides { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
+  .slides::-webkit-scrollbar { display: none; }
+  .quote { scroll-snap-align: start; flex: 0 0 calc((100% - 40px) / 3); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; display: flex; flex-direction: column; gap: 24px; }
+  .quote p { font-size: 16px; flex: 1; }
+  .quote .stars { color: var(--accent); letter-spacing: 3px; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
+  .who small { display: block; color: var(--muted); }
+  .slider-nav { display: flex; gap: 10px; margin-top: 28px; }
+  .arrow { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--text); cursor: pointer; font-size: 18px; transition: .2s; }
+  .arrow:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  @media (max-width: 960px) { .quote { flex-basis: calc((100% - 20px) / 2); } }
+  @media (max-width: 600px) { .quote { flex-basis: 88%; } }
+
+  /* ABOUT + STATS */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; }
+  .stat .num { font-family: Anton, sans-serif; font-size: 56px; color: var(--accent); line-height: 1; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  @media (max-width: 860px) { .about-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .gallery { margin-top: 72px; }
+  .gallery .marquee-track { animation-duration: 55s; }
+  .gallery .marquee-track.rev { animation-direction: reverse; margin-top: 20px; }
+  .g-item { width: 220px; aspect-ratio: 4/5; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); flex-shrink: 0; }
+  .g-item .ph { width: 100%; height: 100%; }
+
+  /* FAQ */
+  .faq-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 64px; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; padding: 22px 0; font-weight: 600; font-size: 17px; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--accent); font-size: 24px; line-height: 1; transition: transform .25s; }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { color: var(--muted); padding: 0 0 22px; max-width: 640px; }
+  @media (max-width: 860px) { .faq-grid { grid-template-columns: 1fr; gap: 24px; } }
+
+  /* PRICING */
+  .pricing { background: var(--bg-2); }
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
+  .plan { background: var(--card); border: 1px solid var(--line); border-radius: 28px; padding: 36px; position: relative; display: flex; flex-direction: column; }
+  .plan.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 30px 80px -40px var(--accent); }
+  .badge { position: absolute; top: -14px; left: 36px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; }
+  .plan h3 { font-family: Anton, sans-serif; font-weight: 400; font-size: 34px; text-transform: uppercase; }
+  .plan .sub { color: var(--muted); margin-bottom: 24px; }
+  .price-row { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--line); gap: 12px; }
+  .price-row b { font-family: Anton, sans-serif; font-weight: 400; font-size: 30px; }
+  .price-row b small { font-family: Inter, sans-serif; font-size: 14px; color: var(--muted); }
+  .plan ul { list-style: none; margin: 20px 0 32px; display: grid; gap: 12px; flex: 1; }
+  .plan li { display: flex; gap: 12px; color: #d6d6d6; font-size: 15px; }
+  .plan li::before { content: "✓"; color: var(--accent); font-weight: 700; }
+  .plan .btn { justify-content: center; }
+  .plan .note { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  @media (max-width: 860px) { .plans { grid-template-columns: 1fr; } }
+
+  /* CONTACT */
+  .contact-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-top: 48px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 28px; padding: 36px; }
+  .panel h4 { font-size: 20px; margin-bottom: 24px; }
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  form .full { grid-column: 1 / -1; }
+  label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
+  input, textarea, select { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px; color: var(--text); font: inherit; font-size: 15px; outline: none; transition: border-color .2s; width: 100%; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { min-height: 120px; resize: vertical; }
+  .direct { display: grid; gap: 12px; }
+  .direct a { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; transition: border-color .2s; word-break: break-all; }
+  .direct a:hover { border-color: var(--accent); }
+  .direct .ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); display: grid; place-items: center; }
+  .direct .ic svg { width: 20px; height: 20px; }
+  .direct a.wa { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  .direct a.wa .ic { background: rgba(0,0,0,.12); color: var(--accent-ink); }
+  @media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; } form { grid-template-columns: 1fr; } .panel { padding: 24px; } }
+
+  footer { border-top: 1px solid var(--line); padding: 40px 0; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  .wa-float { position: fixed; right: 20px; bottom: 20px; z-index: 60; width: 60px; height: 60px; border-radius: 50%; background: #25d366; display: grid; place-items: center; box-shadow: 0 10px 30px -8px rgba(37,211,102,.6); transition: transform .2s; }
+  .wa-float:hover { transform: scale(1.08); }
+  .wa-float svg { width: 30px; height: 30px; fill: #fff; }
+
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .8s, transform .8s; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } .reveal { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" data-brand-logo></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#services">Services</a>
+      <a href="#results">Results</a>
+      <a href="#about">About</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a href="#contact" class="btn nav-cta">Free Consultation</a>
+    <button class="burger" id="burger" aria-label="Menu">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <a class="chat-chip" data-wa>
+        <span class="dot" data-coach-initial></span>
+        <span class="live"></span>
+        <span>Hey there, let's talk</span>
+      </a>
+      <h1>Get fit with <em data-brand></em></h1>
+      <p class="lead" data-tagline></p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn">Book Free Consultation →</a>
+        <a href="#pricing" class="btn ghost">See Pricing</a>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <div class="ph ph-a" data-ph="Hero photo"></div>
+      <div class="float-card fc-2"><b data-stat="0"></b><span data-stat-label="0"></span></div>
+      <div class="float-card fc-1"><b data-stat="2"></b><span data-stat-label="2"></span></div>
+    </div>
+  </div>
+</header>
+
+<section id="services">
+  <div class="wrap services-head reveal">
+    <div>
+      <span class="eyebrow">What we do</span>
+      <h2>Personalized solutions for your fitness journey</h2>
+    </div>
+    <p class="lead">Every plan is built around you. Live coaching, custom workouts, nutrition support and progress tracking, so you train smarter and stay motivated.</p>
+  </div>
+  <div class="marquee"><div class="marquee-track" id="services-track"></div></div>
+</section>
+
+<section class="testi" id="results">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Client stories</span>
+      <h2>Real people. Real results.</h2>
+    </div>
+    <div class="slider">
+      <div class="slides" id="slides"></div>
+      <div class="slider-nav">
+        <button class="arrow" id="prev" aria-label="Previous">←</button>
+        <button class="arrow" id="next" aria-label="Next">→</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap about-grid">
+    <div class="reveal">
+      <span class="eyebrow">Why us</span>
+      <h2>Your personal trainer, anytime, anywhere</h2>
+      <p class="lead">Your coach joins you on a live video call, corrects your form in real time and keeps you accountable. Train solo or as a couple, with physiotherapy and expert support built in. Track your progress and stay consistent from wherever you are.</p>
+    </div>
+    <div class="stats reveal" id="stats"></div>
+  </div>
+  <div class="gallery">
+    <div class="marquee"><div class="marquee-track" id="g1"></div></div>
+    <div class="marquee"><div class="marquee-track rev" id="g2"></div></div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap faq-grid">
+    <div class="reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Have questions? We've got answers</h2>
+      <p class="lead">Still unsure? Message us and a coach will reply personally.</p>
+    </div>
+    <div class="reveal" id="faq-list"></div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Pricing</span>
+      <h2>Pick your plan</h2>
+      <p class="lead">Choose a plan that suits your lifestyle and goals. Switch, upgrade or cancel anytime.</p>
+    </div>
+    <div class="plans" id="plans"></div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Contact</span>
+      <h2>Let's get started</h2>
+      <p class="lead">Ready to begin, or just want to learn more? Leave a message or reach out directly and we'll get back to you soon.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="panel reveal">
+        <h4>Request a callback</h4>
+        <form id="form">
+          <label>Name<input name="name" required></label>
+          <label>Email<input name="email" type="email" required></label>
+          <label>WhatsApp<input name="phone" type="tel" required></label>
+          <label>Country<input name="country"></label>
+          <label class="full">Message<textarea name="message" placeholder="Tell us your goal…"></textarea></label>
+          <button class="btn full" type="submit">Send via WhatsApp →</button>
+        </form>
+      </div>
+      <div class="panel reveal">
+        <h4>Contact us directly</h4>
+        <div class="direct" id="direct"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year"></span> <span data-brand></span>. All rights reserved.</span>
+    <span data-footer-note></span>
+  </div>
+</footer>
+
+<a class="wa-float" data-wa aria-label="Chat on WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3M12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4C2.700 15.600 2.200 13.800 2.200 12 2.200 6.600 6.600 2.200 12 2.200S21.800 6.600 21.800 12 17.400 21.800 12 21.800M12 0C5.400 0 0 5.400 0 12c0 2.100.6 4.200 1.600 6L0 24l6.200-1.600c1.800 1 3.800 1.500 5.800 1.500 6.600 0 12-5.400 12-12S18.600 0 12 0"/></svg>
+</a>
+
+<script>
+/* ============================================================
+   EDIT EVERYTHING HERE. All text, prices and contact details
+   on the page come from this one object.
+   ============================================================ */
+const SITE = {
+  brand: "YourBrand",                 // e.g. "IronPulse"
+  coachName: "Coach",                 // first letter shows in the hero chat chip
+  tagline: "Train live, one-on-one, with a certified coach from anywhere in the world. Custom workouts, nutrition plans and real accountability, built around your life.",
+  whatsapp: "910000000000",           // country code + number, digits only
+  whatsappGreeting: "Hello! I'm interested in your coaching.",
+  email: "hello@yourbrand.com",
+  phoneDisplay: "+91 00000 00000",
+  instagram: "yourbrand",             // handle without @
+  currency: "Rs.",
+  footerNote: "Live online coaching · Worldwide",
+
+  stats: [
+    { value: 5,   suffix: "+", label: "Years of training" },
+    { value: 10,  suffix: "+", label: "Expert coaches" },
+    { value: 200, suffix: "+", label: "Happy members" },
+    { value: 8,   suffix: "+", label: "Client countries" },
+  ],
+
+  services: [
+    { title: "1:1 Live Coaching",  text: "Real-time form correction on video, every rep.", ph: "a" },
+    { title: "Nutrition Plans",    text: "Meal plans that fit your food and your schedule.", ph: "b" },
+    { title: "Couple Training",    text: "Train together, even from different cities.", ph: "c" },
+    { title: "Strength & Muscle",  text: "Progressive programs for real strength gains.", ph: "d" },
+    { title: "Yoga & Mobility",    text: "Move better, recover faster, feel lighter.", ph: "e" },
+    { title: "Physio Support",     text: "Train around injuries safely with expert input.", ph: "a" },
+  ],
+
+  // SAMPLE PLACEHOLDERS: replace with real clients' words (with their permission) before going live.
+  testimonials: [
+    { name: "Client Name", place: "Country", text: "Replace this with a real client's story: what they struggled with before, what changed, and a concrete result." },
+    { name: "Client Name", place: "Country", text: "The most convincing testimonials name a number (kg lost, lift PR, months consistent) and a feeling." },
+    { name: "Client Name", place: "Country", text: "Ask happy clients for 2–3 sentences and a photo. Real photos convert far better than stock images." },
+    { name: "Client Name", place: "Country", text: "Mention the coach by name if the client did; it makes the story feel personal and checkable." },
+    { name: "Client Name", place: "Country", text: "Include a beginner, an older client and an experienced lifter so every visitor sees someone like them." },
+  ],
+
+  faqs: [
+    ["How do sessions work?", "All sessions are live video calls. Your coach guides your workout, corrects your form and keeps you motivated in real time."],
+    ["Do I need special equipment?", "No. Your coach designs workouts around whatever you have, whether you train at home or in a gym."],
+    ["Can I train with my partner?", "Yes. We offer solo and couple sessions, and you can join from different locations at the same time."],
+    ["What's in the nutrition plan?", "A personalised meal plan built around your goals, food preferences and lifestyle, reviewed regularly as you progress."],
+    ["When does my monthly plan start?", "On the day of your first confirmed session. You get unlimited sessions for the next 30 days with flexible scheduling."],
+    ["What if I miss a session?", "Let your coach know in advance and reschedule within your active plan period."],
+    ["Can I pause or switch plans?", "Yes. You can switch between individual and couple plans or monthly and session packages anytime, and pause for emergencies."],
+    ["How do I pay?", "UPI, bank transfer or other online methods. You'll get a confirmation once payment is complete."],
+  ],
+
+  plans: [
+    {
+      name: "Monthly", sub: "Unlimited sessions", featured: true,
+      prices: [["Individual", "18,000", "/ month"], ["Couple", "27,000", "/ month"]],
+      features: ["Unlimited live training sessions", "One-on-one personal coaching", "Personalised workout & nutrition plans", "Progress tracking & goal reviews", "Physiotherapy session included", "Flexible scheduling", "Priority support"],
+    },
+    {
+      name: "Session Pack", sub: "12 sessions", featured: false,
+      prices: [["Individual", "1,250", "/ session"], ["Couple", "2,000", "/ session"]],
+      note: "Pay in advance for 12 sessions.",
+      features: ["One-on-one personal coaching", "Personalised workout & nutrition plans", "Progress tracking & goal reviews", "Flexible scheduling", "Constant motivation & accountability"],
+    },
+  ],
+};
+/* ============================================================ */
+
+const $ = (s) => document.querySelector(s);
+const waLink = (msg) => `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(msg || SITE.whatsappGreeting)}`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const icon = {
+  img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
+  wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  ig: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+};
+const ph = (label, v = "a") => `<div class="ph ph-${v}"><div>${icon.img}${esc(label)}</div></div>`;
+
+// brand + basics
+document.title = `${SITE.brand} – Live Personal Coaching`;
+document.querySelectorAll("[data-brand]").forEach((el) => (el.textContent = SITE.brand));
+const half = Math.ceil(SITE.brand.length / 2);
+$("[data-brand-logo]").innerHTML = esc(SITE.brand.slice(0, half)) + "<span>" + esc(SITE.brand.slice(half)) + "</span>";
+$("[data-tagline]").textContent = SITE.tagline;
+$("[data-coach-initial]").textContent = SITE.coachName[0];
+$("[data-footer-note]").textContent = SITE.footerNote;
+$("#year").textContent = new Date().getFullYear();
+document.querySelectorAll("[data-wa]").forEach((a) => { a.href = waLink(); a.target = "_blank"; a.rel = "noopener"; });
+document.querySelectorAll("[data-ph]").forEach((el) => (el.outerHTML = ph(el.dataset.ph, "a").replace('class="ph', 'class="ph ph-fill')));
+document.querySelectorAll(".ph-fill").forEach((el) => (el.style.cssText = "position:absolute;inset:0"));
+document.querySelectorAll("[data-stat]").forEach((el) => { const s = SITE.stats[el.dataset.stat]; el.textContent = s.value + s.suffix; });
+document.querySelectorAll("[data-stat-label]").forEach((el) => (el.textContent = SITE.stats[el.dataset.statLabel].label));
+
+// services marquee (duplicated so the loop is seamless)
+const svcHTML = SITE.services.map((s) => `
+  <div class="svc">${ph("Your photo", s.ph)}
+    <div class="svc-body"><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>
+  </div>`).join("");
+$("#services-track").innerHTML = svcHTML + svcHTML;
+
+// testimonials
+$("#slides").innerHTML = SITE.testimonials.map((t) => `
+  <div class="quote">
+    <div class="stars">★★★★★</div>
+    <p>“${esc(t.text)}”</p>
+    <div class="who"><div class="avatar">${esc(t.name[0])}</div><div><b>${esc(t.name)}</b><small>${esc(t.place)}</small></div></div>
+  </div>`).join("");
+const slides = $("#slides");
+const step = () => slides.querySelector(".quote").offsetWidth + 20;
+$("#next").onclick = () => slides.scrollBy({ left: step(), behavior: "smooth" });
+$("#prev").onclick = () => slides.scrollBy({ left: -step(), behavior: "smooth" });
+
+// stats with count-up
+$("#stats").innerHTML = SITE.stats.map((s) => `
+  <div class="stat"><div class="num" data-to="${s.value}" data-suffix="${esc(s.suffix)}">0</div><span>${esc(s.label)}</span></div>`).join("");
+
+// gallery
+const gal = ["a", "b", "c", "d", "e", "b", "c", "a"].map((v) => `<div class="g-item">${ph("Client photo", v)}</div>`).join("");
+$("#g1").innerHTML = gal + gal;
+$("#g2").innerHTML = gal + gal;
+
+// FAQ
+$("#faq-list").innerHTML = SITE.faqs.map(([q, a], i) => `
+  <details ${i === 0 ? "open" : ""}><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("");
+
+// pricing
+$("#plans").innerHTML = SITE.plans.map((p) => `
+  <div class="plan ${p.featured ? "featured" : ""}">
+    ${p.featured ? '<span class="badge">Most popular</span>' : ""}
+    <h3>${esc(p.name)}</h3>
+    <div class="sub">${esc(p.sub)}</div>
+    ${p.prices.map(([who, amt, per]) => `
+      <div class="price-row"><span>${esc(who)}</span><b>${esc(SITE.currency)} ${esc(amt)} <small>${esc(per)}</small></b></div>`).join("")}
+    ${p.note ? `<div class="note">${esc(p.note)}</div>` : ""}
+    <ul>${p.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+    <a href="#contact" class="btn">Book Free Consultation →</a>
+  </div>`).join("");
+
+// direct contact
+$("#direct").innerHTML = `
+  <a class="wa" href="${waLink()}" target="_blank" rel="noopener"><span class="ic">${icon.wa}</span>Chat on WhatsApp</a>
+  <a href="mailto:${esc(SITE.email)}"><span class="ic">${icon.mail}</span>${esc(SITE.email)}</a>
+  <a href="https://instagram.com/${esc(SITE.instagram)}" target="_blank" rel="noopener"><span class="ic">${icon.ig}</span>@${esc(SITE.instagram)}</a>
+  <a href="tel:${esc(SITE.phoneDisplay.replace(/\s/g, ""))}"><span class="ic">${icon.phone}</span>${esc(SITE.phoneDisplay)}</a>`;
+
+// form: no backend needed, it opens WhatsApp with the details pre-filled
+$("#form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  const msg = `Hi ${SITE.brand}! I'd like a callback.\n\nName: ${d.name}\nEmail: ${d.email}\nWhatsApp: ${d.phone}\nCountry: ${d.country}\n\n${d.message}`;
+  window.open(waLink(msg), "_blank", "noopener");
+});
+
+// nav
+const nav = $("#nav");
+addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 20), { passive: true });
+$("#burger").onclick = () => $("#navLinks").classList.toggle("open");
+document.querySelectorAll("#navLinks a").forEach((a) => (a.onclick = () => $("#navLinks").classList.remove("open")));
+
+// reveal on scroll + stat count-up
+const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+  if (!en.isIntersecting) return;
+  en.target.classList.add("in");
+  en.target.querySelectorAll("[data-to]").forEach((el) => {
+    const to = +el.dataset.to, t0 = performance.now();
+    const tick = (t) => { const k = Math.min((t - t0) / 1400, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + el.dataset.suffix; if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+  io.unobserve(en.target);
+}), { threshold: 0.15 });
+document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>
